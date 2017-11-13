@@ -1,5 +1,5 @@
 {
-  "name": "@forbes/fbs-authentication",
+  "name": "fbs-authentication",
   "version": "0.0.1",
   "description": "A firebase authentication based service",
   "main": "./dist/fbsAuthenticationService.js",
