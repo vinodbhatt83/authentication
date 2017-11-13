@@ -1,0 +1,47 @@
+{
+  "name": "@forbes/fbs-authentication",
+  "version": "0.0.1",
+  "description": "A firebase authentication based service",
+  "main": "./dist/fbsAuthenticationService.js",
+  "scripts": {
+    "test": "npm run lint && karma start karma.conf.js --single-run",
+    "test:watch": "karma start karma.conf.js",
+    "lint": "eslint ./src/**/*.js",
+    "start": "rimraf dist && webpack ./index.js && webpack-dev-server",
+    "build:dev": "rimraf dist && webpack ./index.js",
+    "build": "rimraf dist && webpack",
+    "watch": "webpack --watch"
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "registry": "https://forbes.jfrog.io/forbes/api/npm/npm-virtual"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vinodbhatt83/authentication.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "babel-core": "^6.26.0",
+    "babel-loader": "^7.1.2",
+    "babel-preset-env": "^1.6.1",
+    "eslint": "^4.9.0",
+    "eslint-config-airbnb-base": "^12.1.0",
+    "eslint-plugin-import": "^2.7.0",
+    "istanbul-instrumenter-loader": "^3.0.0",
+    "jasmine": "^2.8.0",
+    "karma": "^1.7.1",
+    "karma-chrome-launcher": "^2.2.0",
+    "karma-cli": "^1.0.1",
+    "karma-coverage-istanbul-reporter": "^1.3.0",
+    "karma-jasmine": "^1.1.0",
+    "karma-webpack": "^2.0.5",
+    "rimraf": "^2.6.2",
+    "webpack": "^3.7.1",
+    "webpack-dev-server": "^2.9.2",
+    "webpack-merge": "^4.1.0"
+  }
+}
