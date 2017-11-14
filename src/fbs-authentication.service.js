@@ -18,9 +18,55 @@ export default class FbsAuthenticationService {
     // The different urls used to share articles to different social platforms
 
     // set the default config object for the new share window to open
+    this.init();
+  }
+
+  init () {
+    let config = {
+      apiKey: "AIzaSyAaNgSoOVn97vPUuozBT0AggY6vDP4D3Jw",
+      authDomain: "fbs-auth.firebaseapp.com",
+      databaseURL: "https://fbs-auth.firebaseio.com",
+      projectId: "fbs-auth",
+      storageBucket: "fbs-auth.appspot.com",
+      messagingSenderId: "972288649195"
+    };
+
+    let fbaseScripts = [
+      '<script src="https://www.gstatic.com/firebasejs/4.5.0/firebase.js"></script>',
+      '<script>' + window.firebase.initializeApp(config) + '</script>',
+      '<script src="https://cdn.firebase.com/libs/firebaseui/2.4.0/firebaseui.js"></script>',
+      '<link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/2.4.0/firebaseui.css" />',
+      '<link type="text/css" rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/2.4.0/firebase-ui-auth.css" />'
+    ];
+    
+    for (index = 0; index < fbaseScripts.length; ++index) {
+        var script = document.createElement('script');
+        script.src = fbaseScripts[index];
+        script.type='text/javascript';
+        var done = false;
+        script.onload = script.onreadystatechange = function() {
+            if (!done && (!this.readyState || this.readyState == "loaded" || this.readyState == "complete")) {
+                done = true;
+            }
+        };  
+        document.getElementsByTagName("head")[0].appendChild(script);
+    }
+
     this.firebase = window.firebase || {};
     this.firebaseui = window.firebaseui || {};
+
+    this.fbaseUi = new this.firebaseui.auth.AuthUI(this.firebase.auth());
+    this.handleSignedOutUser();
   }
+
+  /**
+   * Displays the UI for a signed out user.
+   */
+  handleSignedOutUser () {
+    document.getElementById('user-signed-in').style.display = 'none';
+    document.getElementById('user-signed-out').style.display = 'block';
+    this.fbaseUi.start('#fbs-auth', this.getUiConfig());
+  };
 
   getUiConfig () {
     return {
@@ -63,48 +109,6 @@ export default class FbsAuthenticationService {
     };
   }
 
-  init () {
-
-    var config = {
-      apiKey: "AIzaSyAaNgSoOVn97vPUuozBT0AggY6vDP4D3Jw",
-      authDomain: "fbs-auth.firebaseapp.com",
-      databaseURL: "https://fbs-auth.firebaseio.com",
-      projectId: "fbs-auth",
-      storageBucket: "fbs-auth.appspot.com",
-      messagingSenderId: "972288649195"
-    };
-
-    let fbaseScripts = [
-      '<script src="https://www.gstatic.com/firebasejs/4.5.0/firebase.js"></script>',
-      '<script>' + config + this.firebase.initializeApp(config) + '</script>',
-      '<script src="https://cdn.firebase.com/libs/firebaseui/2.4.0/firebaseui.js"></script>',
-      '<link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/2.4.0/firebaseui.css" />',
-      '<link type="text/css" rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/2.4.0/firebase-ui-auth.css" />'
-    ];
-    
-    for (index = 0; index < fbaseScripts.length; ++index) {
-        var script = document.createElement('script');
-        script.src = fbaseScripts[index];
-        script.type='text/javascript';
-        var done = false;
-        script.onload = script.onreadystatechange = function() {
-            if (!done && (!this.readyState || this.readyState == "loaded" || this.readyState == "complete")) {
-                done = true;
-            }
-        };  
-        document.getElementsByTagName("head")[0].appendChild(script);
-    }
-    this.fbaseUi = new this.firebaseui.auth.AuthUI(this.firebase.auth());
-    this.getUiConfig();
-  }
-
-  /**
-   * Open a popup with the FirebaseUI widget.
-   */
-  signInWithPopup () {
-    window.open(getWidgetUrl(), 'Sign In', 'width=985,height=735');
-  };
-
   /**
    * Displays the UI for a signed in user.
    * @param {!firebase.User} user
@@ -124,20 +128,18 @@ export default class FbsAuthenticationService {
   };
 
   /**
-   * Displays the UI for a signed out user.
-   */
-  handleSignedOutUser () {
-    document.getElementById('user-signed-in').style.display = 'none';
-    document.getElementById('user-signed-out').style.display = 'block';
-    this.fbaseUi.start('fbs-auth', getUiConfig());
-  };
-
-  /**
-   * Initializes the app.
+   * Signout the app.
    */
   signOut () {
     document.getElementById('sign-out').addEventListener('click', function() {
       this.firebase.auth().signOut();
     });
+  };
+
+   /**
+   * Open a popup with the FirebaseUI widget.
+   */
+  signInWithPopup () {
+    window.open(getWidgetUrl(), 'Sign In', 'width=985,height=735');
   };
 }
