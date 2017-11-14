@@ -1,4 +1,4 @@
-import FbsSharingService from './src';
+import FbsAuthenticationService from './src';
 
 /*
  * Example of how to use the FbsSharingService
