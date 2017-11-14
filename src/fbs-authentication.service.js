@@ -14,31 +14,58 @@ export default class FbsAuthenticationService {
    * @memberof FbsSharingService
    */
 
-  constructor(configOpts = {
-    // width: '400',
-    // height: '500',
-    // isResizable: false,
-    // windowName: 'Authentication',
-  }) {
+  constructor(configOpts = {}) {
     // The different urls used to share articles to different social platforms
-    this.authMap = {
-      // facebook: 'https://www.facebook.com/sharer.php?u=',
-      // twitter: 'https://twitter.com/intent/tweet?url=',
-      // google: 'https://plus.google.com/share?url=',
-      // linkedin: 'https://www.linkedin.com/shareArticle?mini=true&url=',
-      // email: 'mailto:?',
-      // sms: 'sms:',
-    };
 
     // set the default config object for the new share window to open
-    this.config = configOpts;
+    window.onload = this.init();
+  }
 
-    let fbaseScripts = `<script src="https://www.gstatic.com/firebasejs/4.5.0/firebase.js"></script>
-    <script src="https://cdn.firebase.com/libs/firebaseui/2.4.0/firebaseui.js"></script>
-    <link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/2.4.0/firebaseui.css" />
-    <link type="text/css" rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/2.4.0/firebase-ui-auth.css" />
-    <script>
-    // Initialize Firebase
+  fbaseUi = new firebaseui.auth.AuthUI(firebase.auth());
+
+  getUiConfig = function() {
+    return {
+      'callbacks': {
+        // Called when the user has been successfully signed in.
+        'signInSuccess': function(user, credential, redirectUrl) {
+          this.handleSignedInUser(user);
+          // Do not redirect.
+          return false;
+        }
+      },
+      // Opens IDP Providers sign-in flow in a popup.
+      'signInFlow': 'popup',
+      'signInOptions': [
+        // TODO(developer): Remove the providers you don't need for your app.
+        {
+          provider: firebase.auth.GoogleAuthProvider.PROVIDER_ID,
+          scopes: ['https://www.googleapis.com/auth/plus.login']
+        },
+        {
+          provider: firebase.auth.FacebookAuthProvider.PROVIDER_ID,
+          scopes :[
+            'public_profile',
+            'email'
+          ]
+        },
+        firebase.auth.TwitterAuthProvider.PROVIDER_ID,
+        firebase.auth.GithubAuthProvider.PROVIDER_ID,
+        {
+          provider: firebase.auth.EmailAuthProvider.PROVIDER_ID,
+          // Whether the display name should be displayed in Sign Up page.
+          requireDisplayName: true
+        },
+        {
+          provider: firebase.auth.PhoneAuthProvider.PROVIDER_ID
+        }
+      ],
+      // Terms of service url.
+      'tosUrl': 'https://www.google.com'
+    };
+  }
+
+  init = function() {
+
     var config = {
       apiKey: "AIzaSyAaNgSoOVn97vPUuozBT0AggY6vDP4D3Jw",
       authDomain: "fbs-auth.firebaseapp.com",
@@ -47,10 +74,28 @@ export default class FbsAuthenticationService {
       storageBucket: "fbs-auth.appspot.com",
       messagingSenderId: "972288649195"
     };
-    firebase.initializeApp(config);
-  </script>`;
 
-    document.body.appendChild(fbaseScripts);
+    let fbaseScripts = [
+      '<script src="https://www.gstatic.com/firebasejs/4.5.0/firebase.js"></script>',
+      '<script>' + config + firebase.initializeApp(config) + '</script>',
+      '<script src="https://cdn.firebase.com/libs/firebaseui/2.4.0/firebaseui.js"></script>',
+      '<link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/2.4.0/firebaseui.css" />',
+      '<link type="text/css" rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/2.4.0/firebase-ui-auth.css" />'
+    ];
+    
+    for (index = 0; index < fbaseScripts.length; ++index) {
+        var script = document.createElement('script');
+        script.src = fbaseScripts[index];
+        script.type='text/javascript';
+        var done = false;
+        script.onload = script.onreadystatechange = function() {
+            if (!done && (!this.readyState || this.readyState == "loaded" || this.readyState == "complete")) {
+                done = true;
+            }
+        };  
+        document.getElementsByTagName("head")[0].appendChild(script);
+    }
+    this.getUiConfig();
   }
 
   /**
@@ -84,166 +129,15 @@ export default class FbsAuthenticationService {
   handleSignedOutUser = function() {
     document.getElementById('user-signed-in').style.display = 'none';
     document.getElementById('user-signed-out').style.display = 'block';
-    ui.start('#firebaseui-container', getUiConfig());
+    this.fbaseUi.start('fbs-auth', getUiConfig());
   };
-
-  // Listen to change in auth state so it displays the correct UI for when
-  // the user is signed in or not.
-  // firebase.auth().onAuthStateChanged(function(user) {
-  //   document.getElementById('loading').style.display = 'none';
-  //   document.getElementById('loaded').style.display = 'block';
-  //   user ? handleSignedInUser(user) : handleSignedOutUser();
-  // });
 
   /**
    * Initializes the app.
    */
-  initApp = function() {
+  signOut = function() {
     document.getElementById('sign-out').addEventListener('click', function() {
       firebase.auth().signOut();
     });
   };
-
-  // /**
-  //  * Opens a window to share a Forbes article on the different social media platforms:
-  //  * Platforms: google, linkedin, facebook, twitter, and email
-  //  *
-  //  * @param {any} e - the event that was is being propogated when firing the function
-  //  * @param {String} platform - the social platform to share the article on e.g 'facebook'
-  //  * @param {Object} article - {
-  //  *  title: 'Something Interesting',
-  //  *  description: 'some random description of this article',
-  //  *  uri: 'https://www.forbes.com/article-uri',
-  //  *  blogType: 'author',
-  //  *  slug: 'Brand',
-  //  * }
-  //  * Note: On some projects the article object has a url property instead of uri
-  //  * @param {Object} - {
-  //  *  width: '400',
-  //  *  height: '500',
-  //  *  isResizable: false,
-  //  *  windowName: 'some window name',
-  //  * }
-  //  * @memberof FbsSharingService
-  //  */
-  // shareArticleOnSocial(e, platform, article, {
-  //   width = this.config.width,
-  //   height = this.config.height,
-  //   isResizable = this.config.isResizable,
-  //   windowName = this.config.windowName,
-  // } = {}) {
-  //   // prevent the default on the click event and stop the event
-  //   // from bubbling up to the hide/show icons button
-  //   e.preventDefault();
-  //   e.stopPropagation();
-
-  //   // don't do anything if no platform was specified or an invalid platform was given
-  //   if (!platform || !this.authMap[platform] || !article) {
-  //     return;
-  //   }
-
-  //   const shouldResize = isResizable ? 'yes' : 'no';
-  //   const link = this.configureSocialLink(platform, article);
-  //   if (platform === 'email' || platform === 'sms') {
-  //     this.openMessageClient(link);
-  //   } else {
-  //     const windowConfig = `width=${width},height=${height},resizable=${shouldResize}`;
-  //     window.open(link, windowName, windowConfig).focus();
-  //   }
-  // }
-
-  // /**
-  //  * Configures the link to open the sharing window
-  //  *
-  //  * @param {String} platform - the social platform to share the article on
-  //  * @param {Object} article - {
-  //  *  title: 'Something Interesting',
-  //  *  description: 'some random description of this article',
-  //  *  uri: 'https://www.forbes.com/article-uri',
-  //  *  blogType: 'author',
-  //  *  slug: 'Brand',
-  //  * }
-  //  * Note: On some projects the article object has a url property instead of uri
-  //  * @returns {String} - the link used when opening the new window
-  //  * @memberof FbsSharingService
-  //  */
-  // configureSocialLink(platform, article) {
-  //   const articleTitle = this.getTitle(article) || '';
-  //   const articleUri = article.uri || article.url || '';
-  //   const articleDescription = article.description || articleTitle || '';
-
-  //   switch (platform) {
-  //     case 'twitter':
-  //       return this.formatTwitterLink(articleTitle, articleUri);
-  //     case 'email':
-  //       return this.formatEmailLink(articleTitle, articleUri);
-  //     case 'linkedin':
-  //       return this.formatLinkedinLink(articleTitle, articleUri, articleDescription);
-  //     case 'sms':
-  //       return this.formatSMSLink(articleTitle, articleUri);
-  //     default:
-  //       return `${this.authMap[platform]}${encodeURIComponent(articleUri)}`;
-  //   }
-  // }
-
-  // /**
-  //  * Formats the link for sharing an article through Twitter
-  //  *
-  //  * @param {String} articleTitle - the article's title
-  //  * @param {String} articleUri  - the uri of the article the clinet can share
-  //  * @returns {String}  - the link used when opening the new window
-  //  * @memberof FbsSharingService
-  //  */
-  // formatTwitterLink(articleTitle, articleUri) {
-  //   const titleLength = articleTitle.length;
-  //   let twitterTitle = articleTitle;
-
-  //   // Twitter has 140 char limit, the link is 23 + a space, and the via @forbes
-  //   // append is 12 leaving 104 chars for the title
-  //   if (titleLength > 104) {
-  //     twitterTitle = twitterTitle.substring(0, 101);
-  //     twitterTitle += '...';
-  //   }
-
-  //   return `${this.authMap.twitter}${encodeURIComponent(articleUri)}&text=${twitterTitle} via @forbes`;
-  // }
-
-  // /**
-  //  * Maps over an array of the different share icons and adds a click event listener
-  //  * that will fire the shareArticleOnSocial function for each respective platform given in
-  //  * each object inside of the array
-  //  *
-  //  * @param {Array[Object]} shareIcons - takes an array of object whose structure is:
-  //  * { element: <element>, platform: <socialPlatform> } where the element is the icon element to
-  //  * attach the event listener to and the platform is the social platform to share it over
-  //  * @param {Object} - {
-  //  *  platform: 'facebook',
-  //  *  width: '400',
-  //  *  height: '500',
-  //  *  isResizable: false,
-  //  *  windowName: 'some window name',
-  //  * }
-  //  * @memberof FbsSharingService
-  //  */
-  // mapShareToClick(
-  //   shareIcons,
-  //   article,
-  //   {
-  //     width = this.config.width,
-  //     height = this.config.height,
-  //     isResizable = this.config.isResizable,
-  //     windowName = this.config.windowName,
-  //   } = {},
-  // ) {
-  //   shareIcons.forEach((icon) => {
-  //     icon.element.addEventListener('click', (e) => {
-  //       this.shareArticleOnSocial(e, icon.platform, article, {
-  //         width,
-  //         height,
-  //         isResizable,
-  //         windowName,
-  //       });
-  //     });
-  //   });
-  // }
 }
